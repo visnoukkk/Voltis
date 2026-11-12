@@ -397,6 +397,7 @@ do --// UI Source
             local StartPosition
             local OutlineFrame = nil
             local AbsStartPos = nil
+            local StartAnchor = nil
 
             local CreateOutline = function()
                 if OutlineFrame and OutlineFrame.Parent then
@@ -456,6 +457,7 @@ do --// UI Source
                     Dragging = true
                     DragStart = Input.Position
                     StartPosition = Gui.Position
+                    StartAnchor = Gui.AnchorPoint
                     AbsStartPos = Vector2.new(Gui.AbsolutePosition.X, Gui.AbsolutePosition.Y)
 
                     if UseOutline then
@@ -471,10 +473,17 @@ do --// UI Source
                         if Input.UserInputState == Enum.UserInputState.End then
                             Dragging = false
                             if UseOutline and OutlineFrame then
-                                local finalX = OutlineFrame.Position.X.Offset
-                                local finalY = OutlineFrame.Position.Y.Offset
-                                Gui.AnchorPoint = Vector2.new(0, 0)
-                                Self:Tween({Position = UDim2.fromOffset(finalX, finalY)}, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out))
+                                local finalAbsX = OutlineFrame.Position.X.Offset
+                                local finalAbsY = OutlineFrame.Position.Y.Offset
+                                local size = Gui.AbsoluteSize
+
+                                -- Keep original AnchorPoint and convert absolute position correctly
+                                -- so the window does NOT jump up/down
+                                local newPosX = finalAbsX + (size.X * StartAnchor.X)
+                                local newPosY = finalAbsY + (size.Y * StartAnchor.Y)
+
+                                Gui.AnchorPoint = StartAnchor
+                                Self:Tween({Position = UDim2.fromOffset(newPosX, newPosY)}, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out))
                                 Gui.BackgroundTransparency = 0
                                 DestroyOutline()
                             end
