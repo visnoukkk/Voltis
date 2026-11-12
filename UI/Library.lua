@@ -3204,8 +3204,23 @@ do --// UI Source
                         Position = UDim2.new(0.5, 0, 0.5, 0),
                         Size = UDim2.new(0, 620, 0, 530),
                         BorderSizePixel = 0,
-                        BackgroundColor3 = Library.Theme["Background"]
-                    }):AddToTheme({BackgroundColor3 = 'Background'})
+                        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+                        BackgroundTransparency = 0.15,
+                        ClipsDescendants = true
+                    })
+
+                    -- Background image
+                    Library:Create("ImageLabel", {
+                        Name = "\0",
+                        Parent = Items["MainFrame"].Instance,
+                        BackgroundTransparency = 1,
+                        Image = "rbxassetid://138379119932873",
+                        ScaleType = Enum.ScaleType.Stretch,
+                        Size = UDim2.new(1, 0, 1, 0),
+                        Position = UDim2.new(0, 0, 0, 0),
+                        ZIndex = 0,
+                        BorderSizePixel = 0
+                    })
 
                     Items["MainFrame"]:MakeDraggable(true) -- true = show legacy-style outline while dragging
                     Items["MainFrame"]:MakeResizeable(Vector2.new(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y))
