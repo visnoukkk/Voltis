@@ -96,9 +96,6 @@ MenuDim.ZIndex = 0;
 MenuDim.Visible = false;
 MenuDim.Parent = MenuDimGui;
 
--- ============================================================
--- Rotating white image behind the menu (added)
--- ============================================================
 local SpinGui = Instance.new('ScreenGui');
 ProtectGui(SpinGui);
 SpinGui.ZIndexBehavior = Enum.ZIndexBehavior.Global;
@@ -118,7 +115,6 @@ SpinImage.ImageColor3 = Color3.new(1, 1, 1);
 SpinImage.ImageTransparency = 0.35;
 SpinImage.ZIndex = 1;
 SpinImage.Parent = SpinGui;
--- ============================================================
 
 local Toggles = {};
 local Options = {};
@@ -214,7 +210,6 @@ local EZ = {
 EZ.Toggles = Toggles;
 EZ.Options = Options;
 
--- Rotation loop for the spinning background image
 table.insert(EZ.Signals, RenderStepped:Connect(function(Delta)
 	SpinImage.Rotation = (SpinImage.Rotation + Delta * 30) % 360;
 end))
@@ -5287,6 +5282,7 @@ function EZ:CreateWindow(...)
 	local Outer = EZ:Create('Frame', {
 		AnchorPoint = Config.AnchorPoint,
 		BackgroundColor3 = Color3.new(0, 0, 0);
+		BackgroundTransparency = 1;
 		BorderSizePixel = 0;
 		Position = Config.Position,
 		Size = Config.Size,
@@ -5307,9 +5303,6 @@ function EZ:CreateWindow(...)
 		EZ:MakeResizable(Outer, Config.MinSize);
 	end;
 
-	-- ============================================================
-	-- Main window background as an image (added)
-	-- ============================================================
 	local Inner = EZ:Create('ImageLabel', {
 		BackgroundTransparency = 1;
 		BorderColor3 = EZ.OutlineColor;
@@ -5323,7 +5316,6 @@ function EZ:CreateWindow(...)
 		Parent = Outer;
 	});
 	EZ.MainBackgroundImage = Inner;
-	-- ============================================================
 
 	local WindowLabel = EZ:CreateLabel({
 		Position = UDim2.new(0, 0, 0, 0);
@@ -5356,7 +5348,7 @@ function EZ:CreateWindow(...)
 
 	local MainSectionOuter = EZ:Create('Frame', {
 		BackgroundColor3 = EZ.BackgroundColor;
-		BackgroundTransparency = 0.25;
+		BackgroundTransparency = 1;
 		BorderColor3 = EZ.OutlineColor;
 		Position = UDim2.new(0, 8, 0, 25);
 		Size = UDim2.new(1, -16, 1, -33);
@@ -5371,7 +5363,7 @@ function EZ:CreateWindow(...)
 
 	local MainSectionInner = EZ:Create('Frame', {
 		BackgroundColor3 = EZ.BackgroundColor;
-		BackgroundTransparency = 0.25;
+		BackgroundTransparency = 1;
 		BorderColor3 = Color3.new(0, 0, 0);
 		BorderMode = Enum.BorderMode.Inset;
 		Position = UDim2.new(0, 0, 0, 0);
@@ -5419,7 +5411,7 @@ function EZ:CreateWindow(...)
 
 	local TabContainer = EZ:Create('Frame', {
 		BackgroundColor3 = EZ.MainColor;
-		BackgroundTransparency = 0.25;
+		BackgroundTransparency = 1;
 		BorderColor3 = EZ.OutlineColor;
 		BorderSizePixel = 2;
 		Position = UDim2.new(0, 8, 0, 38);
@@ -5435,7 +5427,7 @@ function EZ:CreateWindow(...)
 
 	local TabContainerInner = EZ:Create('Frame', {
 		BackgroundColor3 = EZ.MainColor;
-		BackgroundTransparency = 0.25;
+		BackgroundTransparency = 1;
 		BorderColor3 = Color3.new(0, 0, 0);
 		Position = UDim2.new(0, 0, 0, 0);
 		Size = UDim2.new(1, 0, 1, 0);
