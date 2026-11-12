@@ -96,26 +96,6 @@ MenuDim.ZIndex = 0;
 MenuDim.Visible = false;
 MenuDim.Parent = MenuDimGui;
 
-local SpinGui = Instance.new('ScreenGui');
-ProtectGui(SpinGui);
-SpinGui.ZIndexBehavior = Enum.ZIndexBehavior.Global;
-SpinGui.IgnoreGuiInset = true;
-SpinGui.DisplayOrder = 998; -- behind main menu (999), above dim (997)
-SpinGui.Parent = CoreGui;
-
-local SpinImage = Instance.new('ImageLabel');
-SpinImage.Name = '\0';
-SpinImage.BackgroundTransparency = 1;
-SpinImage.BorderSizePixel = 0;
-SpinImage.AnchorPoint = Vector2.new(0.5, 0.5);
-SpinImage.Position = UDim2.fromScale(0.5, 0.5);
-SpinImage.Size = UDim2.fromOffset(400, 400);
-SpinImage.Image = 'rbxassetid://138379119932873';
-SpinImage.ImageColor3 = Color3.new(1, 1, 1);
-SpinImage.ImageTransparency = 0.35;
-SpinImage.ZIndex = 1;
-SpinImage.Parent = SpinGui;
-
 local Toggles = {};
 local Options = {};
 
@@ -148,8 +128,6 @@ local EZ = {
 	ScreenGui = ScreenGui;
 	OutlineGui = OutlineGui;
 	CursorGui = CursorGui;
-	SpinGui = SpinGui;
-	SpinImage = SpinImage;
 
 	MenuBlur = MenuBlur;
 	MenuColor = MenuColor;
@@ -209,10 +187,6 @@ local EZ = {
 
 EZ.Toggles = Toggles;
 EZ.Options = Options;
-
-table.insert(EZ.Signals, RenderStepped:Connect(function(Delta)
-	SpinImage.Rotation = (SpinImage.Rotation + Delta * 30) % 360;
-end))
 
 function EZ:SetFolder(Folder)
 	self.Folder = Folder;
@@ -1013,8 +987,8 @@ function EZ:UpdateColorsUsingRegistry()
 			elseif type(ColorIdx) == 'function' then
 				Object.Instance[Property] = ColorIdx()
 			end
-		end
-	end
+		end;
+	end;
 end;
 
 function EZ:GiveSignal(Signal)
@@ -2174,6 +2148,9 @@ DisplayFrame.InputBegan:Connect(function(Input)
 				local State = KeyPicker:GetState();
 
 				local shouldShow = true;
+				-- "All" = always list the keybind (unless NoUI)
+				-- "Toggled" = only when parent toggle is on
+				-- "Active" = only when keybind state is currently active
 				if mode == 'Active' then
 					if KeyPicker.Parent and KeyPicker.Parent.Type == 'Toggle' and (not State or not KeyPicker.Parent.Value) then
 						shouldShow = false;
@@ -2218,11 +2195,13 @@ DisplayFrame.InputBegan:Connect(function(Input)
 				end;
 			end;
 
+			-- Keep a minimum height so the "Keybinds" title stays visible when empty
 			EZ.KeybindFrame.Size = UDim2.new(0, math.max(XSize + 30, 210), 0, math.max(YSize, 0) + 23);
 
+			-- Only respect the user flag + mobile; do NOT hide when list is empty
 			if EZ.KeybindFrame then
 				EZ.KeybindFrame.Visible = (EZ.KeypickerListVisible == true) and (not EZ.IsMobile);
-			end;
+			end
 		end;
 
 		function KeyPicker:OverrideState(State)
@@ -5282,7 +5261,6 @@ function EZ:CreateWindow(...)
 	local Outer = EZ:Create('Frame', {
 		AnchorPoint = Config.AnchorPoint,
 		BackgroundColor3 = Color3.new(0, 0, 0);
-		BackgroundTransparency = 1;
 		BorderSizePixel = 0;
 		Position = Config.Position,
 		Size = Config.Size,
@@ -5303,19 +5281,20 @@ function EZ:CreateWindow(...)
 		EZ:MakeResizable(Outer, Config.MinSize);
 	end;
 
-	local Inner = EZ:Create('ImageLabel', {
-		BackgroundTransparency = 1;
+	local Inner = EZ:Create('Frame', {
+		BackgroundColor3 = EZ.MainColor;
 		BorderColor3 = EZ.OutlineColor;
 		BorderMode = Enum.BorderMode.Inset;
 		Position = UDim2.new(0, 1, 0, 0);
 		Size = UDim2.new(1, 0, 1, 0);
-		Image = 'rbxassetid://71338584124061';
-		ImageTransparency = 0.15;
-		ScaleType = Enum.ScaleType.Crop;
 		ZIndex = 1;
 		Parent = Outer;
 	});
-	EZ.MainBackgroundImage = Inner;
+
+	EZ:AddToRegistry(Inner, {
+		BackgroundColor3 = 'MainColor';
+		BorderColor3 = 'OutlineColor';
+	});
 
 	local WindowLabel = EZ:CreateLabel({
 		Position = UDim2.new(0, 0, 0, 0);
@@ -5323,7 +5302,7 @@ function EZ:CreateWindow(...)
 		Text = Config.Title or '';
 		TextSize = 18;
 		TextXAlignment = Enum.TextXAlignment.Center;
-		ZIndex = 2;
+		ZIndex = 1;
 		Parent = Inner;
 	});
 
@@ -5338,7 +5317,7 @@ function EZ:CreateWindow(...)
 		Text = Config.Game or '';
 		RichText = true;
 		TextXAlignment = Enum.TextXAlignment.Right;
-		ZIndex = 2;
+		ZIndex = 1;
 		Parent = Inner;
 	});
 
@@ -5348,11 +5327,10 @@ function EZ:CreateWindow(...)
 
 	local MainSectionOuter = EZ:Create('Frame', {
 		BackgroundColor3 = EZ.BackgroundColor;
-		BackgroundTransparency = 1;
 		BorderColor3 = EZ.OutlineColor;
 		Position = UDim2.new(0, 8, 0, 25);
 		Size = UDim2.new(1, -16, 1, -33);
-		ZIndex = 2;
+		ZIndex = 1;
 		Parent = Inner;
 	});
 
@@ -5363,12 +5341,11 @@ function EZ:CreateWindow(...)
 
 	local MainSectionInner = EZ:Create('Frame', {
 		BackgroundColor3 = EZ.BackgroundColor;
-		BackgroundTransparency = 1;
 		BorderColor3 = Color3.new(0, 0, 0);
 		BorderMode = Enum.BorderMode.Inset;
 		Position = UDim2.new(0, 0, 0, 0);
 		Size = UDim2.new(1, 0, 1, 0);
-		ZIndex = 2;
+		ZIndex = 1;
 		Parent = MainSectionOuter;
 	});
 
@@ -5386,7 +5363,7 @@ function EZ:CreateWindow(...)
 		AutomaticCanvasSize = Enum.AutomaticSize.XY;
 		ScrollBarThickness = 0;
 		ScrollingDirection = Enum.ScrollingDirection.X;
-		ZIndex = 2;
+		ZIndex = 1;
 		Parent = MainSectionInner;
 	});
 
@@ -5411,12 +5388,11 @@ function EZ:CreateWindow(...)
 
 	local TabContainer = EZ:Create('Frame', {
 		BackgroundColor3 = EZ.MainColor;
-		BackgroundTransparency = 1;
 		BorderColor3 = EZ.OutlineColor;
 		BorderSizePixel = 2;
 		Position = UDim2.new(0, 8, 0, 38);
 		Size = UDim2.new(1, -16, 1, -47);
-		ZIndex = 2;
+		ZIndex = 1;
 		Parent = MainSectionInner;
 	});
 
@@ -5427,11 +5403,10 @@ function EZ:CreateWindow(...)
 
 	local TabContainerInner = EZ:Create('Frame', {
 		BackgroundColor3 = EZ.MainColor;
-		BackgroundTransparency = 1;
 		BorderColor3 = Color3.new(0, 0, 0);
 		Position = UDim2.new(0, 0, 0, 0);
 		Size = UDim2.new(1, 0, 1, 0);
-		ZIndex = 3;
+		ZIndex = 2;
 		Parent = TabContainer;
 	});
 
@@ -5461,7 +5436,7 @@ function EZ:CreateWindow(...)
 			BorderColor3 = EZ.OutlineColor;
 			BorderSizePixel = 2;
 			Size = UDim2.new(0, TabButtonWidth + 8 + 4, 0.75, 0);
-			ZIndex = 2;
+			ZIndex = 1;
 			Parent = TabArea;
 		});
 
@@ -5474,7 +5449,7 @@ function EZ:CreateWindow(...)
 			BackgroundTransparency = 1;
 			BorderColor3 = EZ.OutlineColor;
 			Size = UDim2.new(1, 0, 1, 0);
-			ZIndex = 3;
+			ZIndex = 2;
 			Parent = TabButton;
 		});
 
@@ -5506,7 +5481,7 @@ function EZ:CreateWindow(...)
 			Size = UDim2.new(1, 0, 1, -1);
 			Text = Name;
 			TextXAlignment = Enum.TextXAlignment.Center;
-			ZIndex = 2;
+			ZIndex = 1;
 			Parent = TabButton;
 		});
 
@@ -6454,6 +6429,8 @@ if not EZ.AccentColorDark then
 end
 
 -- Linoria / Creep style Unload + OnUnload
+-- Store callbacks in a list so multiple bc:OnUnload(...) calls all run,
+-- and never overwrite the method itself (that caused stack overflow).
 Library._UnloadCallbacks = {};
 Library.Unloaded = false;
 
@@ -6469,11 +6446,13 @@ function Library:Unload()
 	end
 	Library.Unloaded = true;
 
+	-- run user callbacks first
 	for _, cb in ipairs(Library._UnloadCallbacks) do
 		pcall(cb);
 	end
 	Library._UnloadCallbacks = {};
 
+	-- disconnect signals
 	if Library.Signals then
 		for Idx = #Library.Signals, 1, -1 do
 			local Connection = table.remove(Library.Signals, Idx);
@@ -6483,6 +6462,7 @@ function Library:Unload()
 		end
 	end
 
+	-- cleanup visual effects
 	pcall(function()
 		if Library.MenuBlur then
 			Library.MenuBlur:Destroy();
@@ -6499,9 +6479,7 @@ function Library:Unload()
 		end
 	end);
 
-	pcall(function()
-		if SpinGui then SpinGui:Destroy() end
-	end);
+	-- destroy GUIs
 	pcall(function()
 		if ScreenGui then ScreenGui:Destroy() end
 	end);
