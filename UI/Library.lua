@@ -396,21 +396,24 @@ do --// UI Source
             local DragStart
             local StartPosition
             local OutlineFrame = nil
+            local AbsStartPos = nil
 
             local CreateOutline = function()
-                if OutlineFrame then return end
+                if OutlineFrame and OutlineFrame.Parent then
+                    OutlineFrame:Destroy()
+                end
                 OutlineFrame = Instance.new("Frame")
-                OutlineFrame.Name = "\0"
+                OutlineFrame.Name = "DragOutline"
                 OutlineFrame.BackgroundTransparency = 1
                 OutlineFrame.BorderSizePixel = 0
                 OutlineFrame.Size = UDim2.fromOffset(Gui.AbsoluteSize.X, Gui.AbsoluteSize.Y)
-                OutlineFrame.Position = UDim2.fromOffset(AbsStartPos.X, AbsStartPos.Y)
+                OutlineFrame.Position = UDim2.fromOffset(Gui.AbsolutePosition.X, Gui.AbsolutePosition.Y)
                 OutlineFrame.ZIndex = 99998
                 OutlineFrame.Parent = Library.Holder.Instance
 
                 local Stroke1 = Instance.new("UIStroke")
                 Stroke1.Color = Library.Theme.Accent
-                Stroke1.Thickness = 1
+                Stroke1.Thickness = 2
                 Stroke1.LineJoinMode = Enum.LineJoinMode.Miter
                 Stroke1.Parent = OutlineFrame
 
@@ -418,18 +421,15 @@ do --// UI Source
                 Stroke2.Color = Color3.fromRGB(0, 0, 0)
                 Stroke2.Thickness = 1
                 Stroke2.LineJoinMode = Enum.LineJoinMode.Miter
-                Stroke2.BorderOffset = UDim.new(0, 1)
                 Stroke2.Parent = OutlineFrame
             end
 
             local DestroyOutline = function()
                 if OutlineFrame then
-                    OutlineFrame:Destroy()
+                    pcall(function() OutlineFrame:Destroy() end)
                     OutlineFrame = nil
                 end
             end
-
-            local AbsStartPos = nil
 
             local Set = function(Input)
                 local DragDelta = Input.Position - DragStart
@@ -437,12 +437,9 @@ do --// UI Source
                 local GuiSize = Gui.AbsoluteSize
 
                 if UseOutline and OutlineFrame and AbsStartPos then
-                    local newAbs = AbsStartPos + DragDelta
-                    newAbs = Vector2.new(
-                        math.clamp(newAbs.X, 0, ScreenSize.X - GuiSize.X),
-                        math.clamp(newAbs.Y, 0, ScreenSize.Y - GuiSize.Y)
-                    )
-                    OutlineFrame.Position = UDim2.fromOffset(newAbs.X, newAbs.Y)
+                    local newAbsX = math.clamp(AbsStartPos.X + DragDelta.X, 0, ScreenSize.X - GuiSize.X)
+                    local newAbsY = math.clamp(AbsStartPos.Y + DragDelta.Y, 0, ScreenSize.Y - GuiSize.Y)
+                    OutlineFrame.Position = UDim2.fromOffset(newAbsX, newAbsY)
                 else
                     local NewX = StartPosition.X.Offset + DragDelta.X
                     local NewY = StartPosition.Y.Offset + DragDelta.Y
@@ -463,8 +460,7 @@ do --// UI Source
 
                     if UseOutline then
                         CreateOutline()
-                        -- Slightly fade the real window while dragging outline
-                        Gui.BackgroundTransparency = 0.6
+                        Gui.BackgroundTransparency = 0.55
                     end
 
                     if InputChanged then
@@ -475,15 +471,17 @@ do --// UI Source
                         if Input.UserInputState == Enum.UserInputState.End then
                             Dragging = false
                             if UseOutline and OutlineFrame then
-                                local finalPos = OutlineFrame.Position
-                                -- Convert to proper position respecting current AnchorPoint
+                                local finalX = OutlineFrame.Position.X.Offset
+                                local finalY = OutlineFrame.Position.Y.Offset
                                 Gui.AnchorPoint = Vector2.new(0, 0)
-                                Self:Tween({Position = finalPos}, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out))
+                                Self:Tween({Position = UDim2.fromOffset(finalX, finalY)}, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out))
                                 Gui.BackgroundTransparency = 0
                                 DestroyOutline()
                             end
-                            InputChanged:Disconnect()
-                            InputChanged = nil
+                            if InputChanged then
+                                InputChanged:Disconnect()
+                                InputChanged = nil
+                            end
                         end
                     end)
                 end
@@ -905,15 +903,18 @@ do --// UI Source
             Name = "\0",
             Parent = Library.Holder.Instance,
             BackgroundTransparency = 1,
-            Size = UDim2.new(0, 0, 1, 0),
+            AnchorPoint = Vector2.new(0.5, 1),
+            Position = UDim2.new(0.5, 0, 1, -40),
+            Size = UDim2.new(0, 0, 0, 0),
             BorderSizePixel = 0,
-            AutomaticSize = Enum.AutomaticSize.X
+            AutomaticSize = Enum.AutomaticSize.XY
         })
 
         Library:Create("UIListLayout", {
             Name = "\0",
             Parent = Library.NotifHolder.Instance,
             VerticalAlignment = Enum.VerticalAlignment.Bottom,
+            HorizontalAlignment = Enum.HorizontalAlignment.Center,
             SortOrder = Enum.SortOrder.LayoutOrder,
             Padding = UDim.new(0, 6)
         })
@@ -3201,7 +3202,7 @@ do --// UI Source
                         Parent = Library.Holder.Instance,
                         AnchorPoint = Vector2.new(0.5, 0.5),
                         Position = UDim2.new(0.5, 0, 0.5, 0),
-                        Size = UDim2.new(0, 485, 0, 417),
+                        Size = UDim2.new(0, 620, 0, 530),
                         BorderSizePixel = 0,
                         BackgroundColor3 = Library.Theme["Background"]
                     }):AddToTheme({BackgroundColor3 = 'Background'})
